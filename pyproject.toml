@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "py_evil_hangman"
+version = "0.1.0"
+description = "UTCS DSC 395T: Evil Hangman"
+authors = ["Matthew Giordano <mgiordano@utexas.edu>"]
+
+# prevent this package from being published by mistake
+
+exclude = ["**/*"]
+[tool.poetry.dependencies]
+python = "^3.6.9"
+pytest = "^6"
+pytest-depends = "^1.0.1"
+mypy = "^0.910"
+
