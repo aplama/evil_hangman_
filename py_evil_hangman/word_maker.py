@@ -59,18 +59,13 @@ class WordMakerAI():
         """
         self.activeDictionary = {}
         self.words = {} # Make sure to read up the documentation on dictionaries. They will be extremely useful for this project.
-        with open(words_file) as wordfile:
+        with open(words_file) as wordfile: # Load a dictionary from 'words_file'
             for line in wordfile:
-                word = line.strip()
+                word = line.strip() # Strip new line escape after each word
                 if len(word) > 0:
-                    self.words[word] = True
+                    self.words[word] = True # Add each word to 'self.words' dictionary
 
-        # while True:
-        #     try:
-        #         wordLength = int(input("What shoud the word length be"))
-        #     except ValueError:
-        #         print('Invalid input')
-
+    
     def reset(self, word_length):
         # start a new game with a word length of `word_length`. 
         # This will always be called before guess() or getValidWord() are called.
@@ -79,25 +74,23 @@ class WordMakerAI():
         # (find somewhere else to preprocess it)
         # DO NOT print anything unless debug is set to true on object initialization
 
-        newDictionary = self.new_dictionary(word_length)
-        print(newDictionary)
-        return newDictionary
+        self.new_dictionary(word_length) # Create a new dictionary of word length 'word_length' via 'new_dictionary()' function
         
-        
-        # pass # TODO: implement this
 
     def getValidWord(self):
         
         # get a valid word in the active dictionary, to return when you lose
         # can return any word, as long as it satisfies the previous guesses
         # DO NOT print anything unless debug is set to true on object initialization
-        self.word = 'there'
-        activeDictionary = self.updatedDictionary
-        if (self.word in activeDictionary):
-            return self.word
-            
-        else:
-            pass
+        
+        correct_word = ''
+        
+        for word in self.activeDictionary:
+            if self.activeDictionary[word] == True: # Take a first word that matches value True
+                correct_word = word # Update correct word
+                break # Exit loop
+        
+        return correct_word
 
             
     def getAmountOfValidWords(self):
@@ -108,8 +101,7 @@ class WordMakerAI():
             # You can see this number by running with the debug flag, i.e. `python3 evil_hangman.py --debug`
         # DO NOT print anything unless debug is set to true on object initialization
 
-        remaining_words = len(self.updatedDictionary)
-        print(remaining_words)
+        remaining_words = len(self.activeDictionary) # Get a length of the 'active_dictionary' and return it
         
         return remaining_words
         
@@ -132,28 +124,53 @@ class WordMakerAI():
         #  and that guess_letter has len of 1 and is a lowercase a-z letter.
         # DO NOT print anything unless debug is set to true on object initialization
         
-        letter_positions = []
+        # Initialize helper lists and dictionaries
+        reduced_sample = {}
+        letter_positions = {}
+        postions_list = []
+        no_duplicates_list = []
+        positions_occurances = {}
+        max_positions_occurance = 0
         
-        dictionary_with_letter = {word: True for word in self.activeDictionary if guess_letter in word}
-        dictionary_without_letter = {word: True for word in self.activeDictionary if guess_letter not in word}
+        with_letter_dict = {word:True for word in self.activeDictionary if guess_letter in word} # Create a dictionary of words that contain the 'guess_letter'
+        without_letter_dict = {word:True for word in self.activeDictionary if guess_letter not in word} # Create a dictionary of words that do not contain the 'guess_letter'
         
-        if len(dictionary_with_letter) > len(dictionary_without_letter):
-            return dictionary_with_letter
-        else:
-            return dictionary_without_letter
+        for word in with_letter_dict:
+            letter_positions[word] = [pos for pos, char in enumerate(word) if char == guess_letter] # Check position of the letter in each word
         
-        
-        
-        pass # TODO: implement this
+        for i in letter_positions:
+            postions_list.append(letter_positions[i]) # Create a list of all positions
+            
+        for i in postions_list:
+            if i not in no_duplicates_list:
+                no_duplicates_list.append(i) # Convert list of all positions into a set
+                
+        for i in no_duplicates_list:
+            positions_occurances[tuple(i)] = postions_list.count(i) # Create a dict of all postions and occurances
+            
 
-    def new_dictionary(self, word_length):
-        self.updatedDictionary = {x: True for x in self.words if len(x) == int(word_length)}
+        max_positions_occurance = max(positions_occurances.values(), default=0) # Get the max occurance
         
-        self.activeDictionary = self.updatedDictionary
+        if len(without_letter_dict) >= max_positions_occurance: # Will continue with words that do not contain letter
+            self.activeDictionary = without_letter_dict # Update active_dictionary with remaining words
+            return [] # Also return empty set.      
         
-        return self.updatedDictionary
+        else: # Will continue with words that do contain letter
+            postion_set = [] # Initialize empty set
+            
+            for i in positions_occurances:
+                if positions_occurances[i] == max_positions_occurance:
+                    postion_set += i
+                
+                    reduced_sample = {word: True for word in letter_positions if letter_positions[word] == postion_set}
+                    self.activeDictionary = reduced_sample # Update active_dictionary with remaining words
+                    break
+                
+            return postion_set # Return list of positions
+
     
-    # def active_dictionary(self, words):
-    #     self.activeDictionary = self.updatedDictionary
+    def new_dictionary(self, word_length):
+        updatedDictionary = {x: True for x in self.words if len(x) == int(word_length)}
         
-    #     return self.activeDictionary    
+        self.activeDictionary = updatedDictionary
+        
